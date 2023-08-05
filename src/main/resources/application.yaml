@@ -1,0 +1,43 @@
+management:
+  endpoint:
+    health:
+      show-details: always
+      enabled: true
+      cache:
+        time-to-live: 10s
+      probes:
+        enabled: true
+    info:
+      build:
+        enabled: true
+      enabled: true
+  endpoints:
+    web:
+      base-path: /
+      path-mapping:
+        health: health
+        liveness: liveness
+        readiness: readiness
+      exposure:
+        include: health, liveness, readiness, metrics
+
+spring:
+  datasource:
+    initialization-mode: always
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+  r2dbc:
+    url: r2dbc:h2:file:///./testdb
+    username: sa
+    password:
+
+  data:
+    r2dbc:
+      repositories:
+        enabled: true
+
