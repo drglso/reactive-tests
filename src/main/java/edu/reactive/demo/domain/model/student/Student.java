@@ -1,8 +1,6 @@
 package edu.reactive.demo.domain.model.student;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -11,7 +9,19 @@ import org.springframework.data.relational.core.mapping.Table;
 @Setter
 @Table("Student")
 @Builder
+@NoArgsConstructor
 public class Student implements StudentActions {
+
+    public Student(Integer id, String documentType, String documentNumber, String name, Integer guardianID, Integer teacherID, Integer groupID) {
+        this.id = id;
+        this.documentType = documentType;
+        this.documentNumber = documentNumber;
+        this.name = name;
+        this.guardianID = guardianID;
+        this.teacherID = teacherID;
+        this.groupID = groupID;
+    }
+
     @Id
     private Integer id;
     private String documentType;
