@@ -19,6 +19,7 @@ import java.util.Map;
 public class StudentController {
 
     private final StudentUseCase studentUseCase;
+    private static final String QUEUE_NAME_STRING = "queueName";
 
     @GetMapping("/{id}")
     public Mono<Student> getStudent(@PathVariable Integer id) {
@@ -61,7 +62,7 @@ public class StudentController {
 
     @PostMapping("/aws/createQueue")
     public Mono<String> createQueueForStudents(@RequestBody Map<String, Object> requestBody) {
-        return studentUseCase.createQueueForStudents((String) requestBody.get("queueName"));
+        return studentUseCase.createQueueForStudents((String) requestBody.get(QUEUE_NAME_STRING));
     }
 
     @PostMapping("/aws/postMessageQueue/{queueName}")
@@ -71,7 +72,7 @@ public class StudentController {
 
     @PostMapping("/aws/deleteStudentFromQueueByDocumentTypeAndDocumentNumber")
     public Mono<Student> deleteStudentFromQueueByDocumentTypeAndDocumentNumber(@RequestBody Map<String, Object> requestBody) {
-        return studentUseCase.deleteStudentFromQueueByDocumentTypeAndDocumentNumber((String) requestBody.get("queueName"),
+        return studentUseCase.deleteStudentFromQueueByDocumentTypeAndDocumentNumber((String) requestBody.get(QUEUE_NAME_STRING),
                 (Integer) requestBody.get("maxNumberMessages"),
                 (Integer) requestBody.get("waitTimeSeconds"),
                 (String) requestBody.get("documentType"),
@@ -80,7 +81,14 @@ public class StudentController {
 
     @PostMapping("/from-kakfa-to-sqs/{topic}")
     public Mono<List<Student>> getStudentFromKafkaTopicAndPublishInSQSQueue(@PathVariable String topic, @RequestBody Map<String, Object> requestBody) {
-        return studentUseCase.getStudentFromKafkaTopicAndPublishInSQSQueueV2(topic,(String) requestBody.get("queueName"));
+        return studentUseCase.getStudentFromKafkaTopicAndPublishInSQSQueueV2(topic, (String) requestBody.get(QUEUE_NAME_STRING));
+    }
+
+    @GetMapping("/sqs/{queueName}")
+    public Mono<List<Student>> getStudentFromSQSQueue(@PathVariable String queueName,
+                                                      @RequestParam(name = "maxNumberMessages") Integer maxNumberMessages,
+                                                      @RequestParam(name = "waitTimeSeconds") Integer waitTimeSeconds) {
+        return studentUseCase.receiveMessagesFromQueue(queueName, maxNumberMessages, waitTimeSeconds);
     }
 
 }

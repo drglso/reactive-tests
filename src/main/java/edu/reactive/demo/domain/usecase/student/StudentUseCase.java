@@ -21,38 +21,31 @@ public class StudentUseCase {
     private final StudentKafkaConsumerService studentKafkaConsumerService;
     private final StudentSQSService studentSQSService;
     private static final Integer DEFAULT_DELAY = 2;
+    private static final String STUDENT_NOT_FOUND_STRING = "Student not found";
 
     public Mono<Student> getStudentById(Integer id) {
         return studentRepository.findById(id)
-                .doOnError(throwable -> {
-                    new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR).getMostSpecificCause();
-                })
+                .doOnError(throwable -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR).getMostSpecificCause())
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Student not found").getMostSpecificCause()));
+                        STUDENT_NOT_FOUND_STRING).getMostSpecificCause()));
     }
 
     public Mono<Student> saveStudent(Student student) {
         return studentRepository.save(student)
-                .doOnError(throwable -> {
-                    new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR).getMostSpecificCause();
-                });
+                .doOnError(throwable -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR).getMostSpecificCause());
     }
 
     public Mono<Student> getStudentByDocument(Identification identification) {
         return studentRepository.findStudentByDocument(identification.getDocumentType(),
                         identification.getDocumentNumber())
-                .doOnError(throwable -> {
-                    new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR).getMostSpecificCause();
-                })
+                .doOnError(throwable -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR).getMostSpecificCause())
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Student not found").getMostSpecificCause()));
+                        STUDENT_NOT_FOUND_STRING).getMostSpecificCause()));
     }
 
     public Mono<Void> deleteStudent(Integer id) {
         return studentRepository.deleteById(id)
-                .doOnError(throwable -> {
-                    new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR).getMostSpecificCause();
-                });
+                .doOnError(throwable -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR).getMostSpecificCause());
     }
 
     public Flux<Student> findAllStudents() {
@@ -64,10 +57,8 @@ public class StudentUseCase {
                 .flatMap(existingStudent ->
                         studentRepository.save(existingStudent.update(studentToUpdate, id)))
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Student not found").getMostSpecificCause()))
-                .doOnError(throwable -> {
-                    new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR).getMostSpecificCause();
-                });
+                        STUDENT_NOT_FOUND_STRING).getMostSpecificCause()))
+                .doOnError(throwable -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR).getMostSpecificCause());
     }
 
     public Mono<List<Student>> getAllStudentsFromKafka(String topic) {
@@ -102,5 +93,10 @@ public class StudentUseCase {
                         "No students were found in the kafka topic").getMostSpecificCause())))
                 .doOnError(throwable -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR)
                         .getMostSpecificCause());
+    }
+
+    public Mono<List<Student>> receiveMessagesFromQueue(String queueName, Integer maxNumberMessages,
+                                                        Integer waitTimeSeconds) {
+        return studentSQSService.getStudentsFromSQSQueue(queueName, maxNumberMessages, waitTimeSeconds);
     }
 }

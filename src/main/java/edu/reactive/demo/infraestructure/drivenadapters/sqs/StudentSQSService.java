@@ -6,10 +6,7 @@ import edu.reactive.demo.domain.model.student.Student;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class StudentSQSService {
@@ -77,7 +74,27 @@ public class StudentSQSService {
         }
     }
 
-    private List<Message> receiveMessagesFromQueue(String queueName, Integer maxNumberMessages, Integer waitTimeSeconds) {
+
+    public Mono<List<Student>> getStudentsFromSQSQueue(String queueName, Integer maxNumberMessages, Integer waitTimeSeconds) {
+        List<Student> students = new ArrayList<>();
+        for (Message message : receiveMessagesFromQueue(queueName, maxNumberMessages, waitTimeSeconds)) {
+            if (!message.getMessageAttributes().isEmpty()) {
+                Student student = Student.builder().id(Integer.valueOf(message.getMessageAttributes().get("id")
+                                .getStringValue()))
+                        .documentType(message.getMessageAttributes().get("documentType").getStringValue())
+                        .documentNumber(message.getMessageAttributes().get("documentNumber").getStringValue())
+                        .name(message.getMessageAttributes().get("name").getStringValue())
+                        .guardianID(Integer.valueOf(message.getMessageAttributes().get("guardianID").getStringValue()))
+                        .teacherID(Integer.valueOf(message.getMessageAttributes().get("teacherID").getStringValue()))
+                        .groupID(Integer.valueOf(message.getMessageAttributes().get("groupID").getStringValue()))
+                        .build();
+                students.add(student);
+            }
+        }
+        return Mono.just(students);
+    }
+
+    public List<Message> receiveMessagesFromQueue(String queueName, Integer maxNumberMessages, Integer waitTimeSeconds) {
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(this.getQueueUrl(queueName))
                 .withMaxNumberOfMessages(maxNumberMessages)
                 .withMessageAttributeNames(List.of("All"))
