@@ -24,6 +24,13 @@ management:
 spring:
   datasource:
     initialization-mode: always
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8090/realms/dev_spring_security
+          jwt-set-uri: http://localhost:8090/realms/dev_spring_security/protocol/openid-connect/certs
+    users: user, admin
 
   jpa:
     properties:

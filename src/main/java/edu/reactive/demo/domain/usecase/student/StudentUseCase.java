@@ -52,6 +52,10 @@ public class StudentUseCase {
         return studentRepository.findAll();
     }
 
+    public Flux<Student> findAllStudentsByGroup(Integer groupId) {
+        return studentRepository.findStudentByGroup(groupId);
+    }
+
     public Mono<Student> udpateStudent(Student studentToUpdate, Integer id) {
         return studentRepository.findById(id)
                 .flatMap(existingStudent ->
